@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sesuatu Buat Kamu ✨</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Short+Stack&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pastelPink: '#FFD1DC',
+                        softPink: '#FFB7B2',
+                        sweetPurple: '#E2D4F9',
+                        warmCream: '#FFF5E4',
+                        deepBerry: '#5C2237',
+                        accentCoral: '#FF8B94'
+                    },
+                    fontFamily: {
+                        sans: ['"Outfit"', 'sans-serif'],
+                        hand: ['"Short Stack"', 'cursive']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #2D111E 0%, #4A1C30 50%, #1F0D16 100%);
+            color: #FFF5E4;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Soft Pastel */
+        .glass-card {
+            background: rgba(255, 245, 228, 0.08);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 209, 220, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .glass-input {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 183, 178, 0.3);
+            backdrop-filter: blur(8px);
+        }
+
+        /* Canvas background */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Keypad Animation */
+        .pin-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .pin-btn:active {
+            transform: scale(0.92);
+            background-color: rgba(255, 183, 178, 0.3);
+        }
+
+        .fade-screen {
+            transition: opacity 0.7s ease-in-out, transform 0.7s ease-in-out;
+        }
+
+        /* Shimmer text */
+        .shimmer-text {
+            background: linear-gradient(90deg, #FFF5E4 0%, #FFB7B2 50%, #E2D4F9 100%);
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            animation: shimmer 4s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+
+        /* Shake Animation */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+        .shake-animation {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(45, 17, 30, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 183, 178, 0.4);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="relative flex flex-col items-center justify-center p-4">
+
+    <!-- Canvas Partikel Hati/Bintang -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- Tombol Audio Musik -->
+    <div id="audioControl" class="fixed top-5 right-5 z-50 hidden opacity-0 transition-opacity duration-1000">
+        <button id="musicToggleBtn" onclick="toggleAudio()" class="glass-card p-3 rounded-full flex items-center justify-center hover:bg-white/10 transition-all text-pastelPink border border-pastelPink/30 shadow-lg group">
+            <i id="musicIcon" class="fas fa-music text-lg group-hover:scale-110 transition-transform"></i>
+            <span id="musicStatus" class="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs transition-all duration-300 ease-in-out text-xs text-warmCream/80 ml-0 group-hover:ml-2">Musik: Off</span>
+        </button>
+    </div>
+
+    <!-- ================= 1. LOCKSCREEN / PIN SECTION ================= -->
+    <section id="lockScreen" class="fade-screen relative z-10 w-full max-w-md mx-auto flex flex-col items-center justify-center min-h-[90vh]">
+        <div class="glass-card w-full p-8 rounded-3xl text-center flex flex-col items-center shadow-2xl relative overflow-hidden">
+            
+            <!-- Glow background hiasan -->
+            <div class="absolute -top-10 -left-10 w-32 h-32 bg-pastelPink/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-sweetPurple/20 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="w-16 h-16 rounded-2xl bg-pastelPink/10 border border-pastelPink/30 flex items-center justify-center mb-5 text-pastelPink text-2xl shadow-inner">
+                <i class="fas fa-heart"></i>
+            </div>
+
+            <h1 class="font-hand text-3xl font-bold text-warmCream mb-2">Password Dulu Yuk! 🔒</h1>
+            <p id="hintText" class="text-sm text-warmCream/70 mb-6 font-light transition-colors duration-300">Masukin tanggal spesial kita buat buka ini.</p>
+
+            <!-- PIN Indicators -->
+            <div id="pinContainer" class="flex gap-2 justify-center mb-8">
+                <!-- Dot indikator dipasang via JS -->
+            </div>
+
+            <!-- Keypad Angka -->
+            <div class="grid grid-cols-3 gap-3.5 w-full max-w-[260px] mb-2">
+                <button onclick="pressKey('1')" class="pin-btn h-14 rounded-2xl glass-input text-xl font-medium text-warmCream flex items-center justify-center border border-white/10 hover:border-pastelPink/50">1</button>
+                <button onclick="pressKey('2')" class="pin-btn h-14 rounded-2xl glass-input text-xl font-medium text-warmCream flex items-center justify-center border border-white/10 hover:border-pastelPink/50">2</button>
+                <button onclick="pressKey('3')" class="pin-btn h-14 rounded-2xl glass-input text-xl font-medium text-warmCream flex items-center justify-center border border-white/10 hover:border-pastelPink/50">3</button>
+                <button onclick="pressKey('4')" class="pin-btn h-14 rounded-2xl glass-input text-xl font-medium text-warmCream flex items-center justify-center border border-white/10 hover:border-pastelPink/50">4</button>
+                <button onclick="pressKey('5')" class="pin-btn h-14 rounded-2xl glass-input text-xl font-medium text-warmCream flex items-center justify-center border border-white/10 hover:border-pastelPink/50">5</button>
+                <button onclick="pressKey('6')" class="pin-btn h-14 rounded-2xl glass-input text-xl font-medium text-warmCream flex items-center justify-center border border-white/10 hover:border-pastelPink/50">6</button>
+                <button onclick="pressKey('7')" class="pin-btn h-14 rounded-2xl glass-input text-xl font-medium text-warmCream flex items-center justify-center border border-white/10 hover:border-pastelPink/50">7</button>
+                <button onclick="pressKey('8')" class="pin-btn h-14 rounded-2xl glass-input text-xl font-medium text-warmCream flex items-center justify-center border border-white/10 hover:border-pastelPink/50">8</button>
+                <button onclick="pressKey('9')" class="pin-btn h-14 rounded-2xl glass-input text-xl font-medium text-warmCream flex items-center justify-center border border-white/10 hover:border-pastelPink/50">9</button>
+                <button onclick="clearKey()" class="pin-btn h-14 rounded-2xl glass-input text-xs font-semibold text-warmCream/60 flex items-center justify-center border border-white/10">RESET</button>
+                <button onclick="pressKey('0')" class="pin-btn h-14 rounded-2xl glass-input text-xl font-medium text-warmCream flex items-center justify-center border border-white/10 hover:border-pastelPink/50">0</button>
+                <button onclick="deleteKey()" class="pin-btn h-14 rounded-2xl glass-input text-sm font-medium text-warmCream/80 flex items-center justify-center border border-white/10"><i class="fas fa-backspace"></i></button>
+            </div>
+            
+            <p class="text-xs text-warmCream/40 mt-3 font-hand">Format: TanggalBulanTahun</p>
+        </div>
+    </section>
+
+    <!-- ================= 2. MAIN CONTENT SECTION ================= -->
+    <main id="mainContent" class="fade-screen hidden opacity-0 relative z-10 w-full max-w-2xl mx-auto py-10 px-4 space-y-8">
+
+        <!-- Header -->
+        <header class="text-center space-y-3">
+            <span class="text-xs font-semibold uppercase tracking-[0.25em] text-pastelPink px-3 py-1 rounded-full bg-pastelPink/10 border border-pastelPink/20 inline-block">Hey Kamu! 👋</span>
+            <h1 class="font-hand text-4xl md:text-5xl font-bold shimmer-text leading-tight pt-1">
+                Jujur Ya, Jujur Banget...
+            </h1>
+            <p class="text-xs text-warmCream/60">Ada beberapa hal kecil yang mau aku ceritain di sini 🤍</p>
+        </header>
+
+        <!-- Pesan Utama (Surat Santai Anak SMA) -->
+        <article class="glass-card p-6 md:p-8 rounded-3xl space-y-5 text-warmCream/90 leading-relaxed font-normal text-base md:text-lg border border-white/10 shadow-xl relative">
+            <div class="absolute top-4 right-5 text-pastelPink/20 text-3xl font-hand">✨</div>
+            
+            <p>
+                Aku sengaja bikin halaman kecil ini cuma buat bilang... makasih ya udah selalu ada dan mewarnai hari-hariku.
+            </p>
+            <p>
+                Tahu gak? Suka aneh aja gitu kalau dipikir-pikir. Kadang cuma berawal dari obrolan ga jelas, candaan absurd waktu ketemu, atau sekadar chat malam pas lagi lelah-lelahnya, tapi entah kenapa hal-hal sederhana kayak gitu selalu sukses bikin hariku terasa jauh lebih baik.
+            </p>
+            <p>
+                Pernah gak sih kamu tiba-tiba kepikiran seseorang atau bahkan bawa dia ke dalam mimpi, terus pas bangun rasa sukanya malah nambah berlipat-lipat? Nah, kira-kira kayak gitu rasanya tiap kali aku merhatiin atau ingat kamu.
+            </p>
+            <p class="font-hand text-pastelPink text-xl pt-1">
+                "Simple aja sih... pokoknya aku seneng banget bisa kenal dan sejauh ini sama kamu."
+            </p>
+        </article>
+
+        <!-- Kartu Pesan Interaktif (Klik Buat Buka Secret Note) -->
+        <section class="space-y-4">
+            <div class="text-center">
+                <h2 class="font-hand text-2xl text-warmCream font-bold">Pesan Tersembunyi 💌</h2>
+                <p class="text-xs text-warmCream/60 mt-1">Coba klik kartu di bawah ini satu-satu!</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+                
+                <!-- Card 1 -->
+                <div onclick="toggleSecretCard(this)" class="glass-card p-5 rounded-2xl cursor-pointer hover:border-pastelPink/50 transition-all duration-300 relative overflow-hidden group">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] text-pastelPink font-bold uppercase tracking-wider">Awal Ketemu</span>
+                        <i class="fas fa-music text-pastelPink group-hover:scale-110 transition-transform"></i>
+                    </div>
+                    <h3 class="font-hand text-lg text-warmCream font-medium mb-1">First Impression</h3>
+                    <p class="card-preview text-xs text-warmCream/60 line-clamp-2">Awalnya aku liat kamu nyanyi di atas panggung...</p>
+                    <div class="card-full hidden mt-3 pt-3 border-t border-white/10 text-xs md:text-sm text-warmCream/90 animate-fade-in">
+                        Pertama kali liat kamu nyanyi di atas panggung, sejujurnya momen itu langsung bikin aku terkesima dan jatuh hati saat itu juga! 🎤✨
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div onclick="toggleSecretCard(this)" class="glass-card p-5 rounded-2xl cursor-pointer hover:border-pastelPink/50 transition-all duration-300 relative overflow-hidden group">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] text-sweetPurple font-bold uppercase tracking-wider">Momen Favorit</span>
+                        <i class="fas fa-heart text-sweetPurple group-hover:scale-110 transition-transform"></i>
+                    </div>
+                    <h3 class="font-hand text-lg text-warmCream font-medium mb-1">Hal-Hal Kecil</h3>
+                    <p class="card-preview text-xs text-warmCream/60 line-clamp-2">Satu hal yang paling bikin aku makin nyaman...</p>
+                    <div class="card-full hidden mt-3 pt-3 border-t border-white/10 text-xs md:text-sm text-warmCream/90 animate-fade-in">
+                        Aku suka banget gimana kamu selalu perhatian dan care sama aku. Hal-hal kecil kayak gitu yang bikin kamu beda dan makin berharga. 🥹🤍
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div onclick="toggleSecretCard(this)" class="glass-card p-5 rounded-2xl cursor-pointer hover:border-pastelPink/50 transition-all duration-300 relative overflow-hidden group">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] text-accentCoral font-bold uppercase tracking-wider">Ke Depannya</span>
+                        <i class="fas fa-star text-accentCoral group-hover:scale-110 transition-transform"></i>
+                    </div>
+                    <h3 class="font-hand text-lg text-warmCream font-medium mb-1">Harapan Kecil</h3>
+                    <p class="card-preview text-xs text-warmCream/60 line-clamp-2">Gak perlu rumit-rumit, cuma mau kamu...</p>
+                    <div class="card-full hidden mt-3 pt-3 border-t border-white/10 text-xs md:text-sm text-warmCream/90 animate-fade-in">
+                        Harapan aku sederhana aja, semoga kamu tetep selalu sayang sama aku ya, hari ini, besok, dan seterusnya. 🫶✨
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Spill Alasan Generator -->
+        <section class="glass-card p-6 md:p-8 rounded-3xl text-center space-y-5 border border-pastelPink/30 relative">
+            <div class="w-12 h-12 rounded-2xl bg-pastelPink/10 border border-pastelPink/30 flex items-center justify-center mx-auto text-pastelPink text-xl shadow-inner">
+                <i class="fas fa-wand-magic-sparkles"></i>
+            </div>
+            
+            <div class="space-y-1">
+                <h2 class="font-hand text-2xl text-warmCream font-bold">Spill Alasan Kenapa Aku Suka Kamu 🙈</h2>
+                <p class="text-xs text-warmCream/60">Pencet tombolnya buat liat alasan randomnya!</p>
+            </div>
+
+            <div id="reasonBox" class="min-h-[70px] flex items-center justify-center p-4 rounded-2xl glass-input border border-white/10 text-warmCream/90 text-sm md:text-base font-hand transition-all duration-300">
+                "Klik tombol di bawah ini ya..."
+            </div>
+
+            <button onclick="generateNewReason()" class="px-6 py-3 rounded-full bg-gradient-to-r from-pastelPink via-softPink to-sweetPurple text-deepBerry font-bold text-sm shadow-lg hover:shadow-pastelPink/30 hover:scale-105 active:scale-95 transition-all duration-200">
+                <i class="fas fa-heart mr-1.5"></i> Spill Alasannya!
+            </button>
+        </section>
+
+        <!-- Footer Santai -->
+        <footer class="text-center pt-6 text-xs text-warmCream/40 font-hand">
+            Dibuat khusus buat kamu • Janji jangan senyum-senyum sendiri ya! 😜
+        </footer>
+
+    </main>
+
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
+    <script>
+        // CONFIGURATION
+        const CORRECT_PIN = "06070810";
+        let currentPin = "";
+        const maxPinLength = 8;
+
+        // Database Alasan Suka (Gaya Anak SMA)
+        const reasons = [
+            "Pas kamu nyanyi di panggung, pesona kamu beneran ga ada obatnya!",
+            "Soalnya kamu tuh care banget sama aku, bikin merasa selalu disayang.",
+            "Kamu asik banget diajak bercanda dan ga pernah jaim.",
+            "Caramu ngerespons chat atau dengerin cerita random-ku selalu bikin adem.",
+            "Kamu selalu punya cara buat bikin hari yang ngebosenin jadi seru.",
+            "Di dekat kamu, aku bisa bebas jadi diri sendiri tanpa perlu pura-pura.",
+            "Perhatian-perhatian kecil dari kamu yang manis itu juara banget sih.",
+            "Pokoknya tiap inget atau liat kamu, mood otomatis langsung naik 100%!"
+        ];
+
+        // PIN Setup Indicators
+        const pinContainer = document.getElementById('pinContainer');
+        for (let i = 0; i < maxPinLength; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'w-3 h-3 rounded-full border border-pastelPink/40 transition-all duration-300';
+            dot.id = `dot-${i}`;
+            pinContainer.appendChild(dot);
+        }
+
+        function pressKey(num) {
+            if (currentPin.length < maxPinLength) {
+                currentPin += num;
+                updateDots();
+                if (currentPin.length === maxPinLength) {
+                    setTimeout(verifyPin, 180);
+                }
+            }
+        }
+
+        function deleteKey() {
+            if (currentPin.length > 0) {
+                currentPin = currentPin.slice(0, -1);
+                updateDots();
+            }
+        }
+
+        function clearKey() {
+            currentPin = "";
+            updateDots();
+        }
+
+        function updateDots() {
+            for (let i = 0; i < maxPinLength; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                if (i < currentPin.length) {
+                    dot.classList.add('bg-pastelPink', 'border-pastelPink', 'scale-110');
+                    dot.classList.remove('border-pastelPink/40');
+                } else {
+                    dot.classList.remove('bg-pastelPink', 'border-pastelPink', 'scale-110');
+                    dot.classList.add('border-pastelPink/40');
+                }
+            }
+        }
+
+        function verifyPin() {
+            const hintText = document.getElementById('hintText');
+            const lockCard = document.querySelector('#lockScreen .glass-card');
+
+            if (currentPin === CORRECT_PIN) {
+                hintText.textContent = "Password bener! Buka sekarang...";
+                hintText.className = "text-sm text-pastelPink font-bold mb-6 transition-colors duration-300";
+                
+                setTimeout(() => {
+                    const lockScreen = document.getElementById('lockScreen');
+                    lockScreen.style.opacity = '0';
+                    lockScreen.style.transform = 'translateY(-20px)';
+
+                    setTimeout(() => {
+                        lockScreen.classList.add('hidden');
+                        
+                        const mainContent = document.getElementById('mainContent');
+                        const audioControl = document.getElementById('audioControl');
+                        
+                        mainContent.classList.remove('hidden');
+                        audioControl.classList.remove('hidden');
+                        
+                        initAudio();
+                        playToneMusic();
+
+                        setTimeout(() => {
+                            mainContent.style.opacity = '1';
+                            audioControl.style.opacity = '1';
+                        }, 50);
+
+                    }, 700);
+
+                }, 300);
+
+            } else {
+                hintText.textContent = "Salah nih PIN-nya 😜 Coba tanggal spesial kita lagi!";
+                hintText.className = "text-sm text-accentCoral font-semibold mb-6 transition-colors duration-300";
+                
+                lockCard.classList.add('shake-animation');
+                setTimeout(() => {
+                    lockCard.classList.remove('shake-animation');
+                    clearKey();
+                }, 400);
+            }
+        }
+
+        // Secret Cards Toggle
+        function toggleSecretCard(cardElement) {
+            const preview = cardElement.querySelector('.card-preview');
+            const fullContent = cardElement.querySelector('.card-full');
+
+            if (fullContent.classList.contains('hidden')) {
+                fullContent.classList.remove('hidden');
+                preview.classList.add('hidden');
+                cardElement.classList.add('border-pastelPink/60', 'bg-white/10');
+            } else {
+                fullContent.classList.add('hidden');
+                preview.classList.remove('hidden');
+                cardElement.classList.remove('border-pastelPink/60', 'bg-white/10');
+            }
+        }
+
+        // Reason Generator Logic
+        let lastIndex = -1;
+        function generateNewReason() {
+            const reasonBox = document.getElementById('reasonBox');
+            reasonBox.style.opacity = '0';
+            
+            setTimeout(() => {
+                let newIndex;
+                do {
+                    newIndex = Math.floor(Math.random() * reasons.length);
+                } while (newIndex === lastIndex && reasons.length > 1);
+                
+                lastIndex = newIndex;
+                reasonBox.textContent = `"${reasons[newIndex]}"`;
+                reasonBox.style.opacity = '1';
+            }, 200);
+        }
+
+        // Web Audio Synthesizer (Music)
+        let audioCtx = null;
+        let isPlaying = false;
+        let musicInterval = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSoftNote(freq, duration) {
+            if (!audioCtx || !isPlaying) return;
+
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+                gain.gain.setValueAtTime(0, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 0.3);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.log(e);
+            }
+        }
+
+        const notes = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25]; 
+        function playToneMusic() {
+            isPlaying = true;
+            updateAudioUI();
+
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            musicInterval = setInterval(() => {
+                if (!isPlaying) return;
+                const note = notes[Math.floor(Math.random() * notes.length)];
+                playSoftNote(note, 3);
+            }, 1000);
+        }
+
+        function toggleAudio() {
+            if (isPlaying) {
+                isPlaying = false;
+                clearInterval(musicInterval);
+                updateAudioUI();
+            } else {
+                initAudio();
+                playToneMusic();
+            }
+        }
+
+        function updateAudioUI() {
+            const icon = document.getElementById('musicIcon');
+            const status = document.getElementById('musicStatus');
+            if (isPlaying) {
+                icon.className = "fas fa-volume-up text-lg group-hover:scale-110 transition-transform text-pastelPink";
+                status.textContent = "Musik: On";
+            } else {
+                icon.className = "fas fa-volume-mute text-lg group-hover:scale-110 transition-transform text-warmCream/40";
+                status.textContent = "Musik: Off";
+            }
+        }
+
+        // Canvas Particles (Floating Hearts & Sparkles)
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + Math.random() * 80;
+                this.size = Math.random() * 7 + 4;
+                this.speedY = Math.random() * 0.7 + 0.3;
+                this.speedX = Math.random() * 0.4 - 0.2;
+                this.opacity = Math.random() * 0.5 + 0.2;
+                this.isHeart = Math.random() > 0.3;
+            }
+
+            update() {
+                this.y -= this.speedY;
+                this.x += this.speedX;
+
+                if (this.y < -20) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.opacity;
+                ctx.fillStyle = '#FFB7B2';
+
+                if (this.isHeart) {
+                    ctx.translate(this.x, this.y);
+                    ctx.beginPath();
+                    const topCurveHeight = this.size * 0.3;
+                    ctx.moveTo(0, topCurveHeight);
+                    ctx.bezierCurveTo(0, 0, -this.size / 2, 0, -this.size / 2, topCurveHeight);
+                    ctx.bezierCurveTo(-this.size / 2, (this.size + topCurveHeight) / 2, 0, this.size, 0, this.size);
+                    ctx.bezierCurveTo(0, this.size, this.size / 2, (this.size + topCurveHeight) / 2, this.size / 2, topCurveHeight);
+                    ctx.bezierCurveTo(this.size / 2, 0, 0, 0, 0, topCurveHeight);
+                    ctx.closePath();
+                    ctx.fill();
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.restore();
+            }
+        }
+
+        const particleCount = Math.min(Math.floor(window.innerWidth / 22), 35);
+        for (let i = 0; i < particleCount; i++) {
+            const p = new Particle();
+            p.y = Math.random() * canvas.height;
+            particles.push(p);
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+    </script>
+</body>
+</html>
